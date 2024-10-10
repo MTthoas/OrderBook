@@ -1,66 +1,70 @@
-## Foundry
+# OrderBook - Solidity Smart Contract
 
-**Foundry is a blazing fast, portable and modular toolkit for Ethereum application development written in Rust.**
+## Introduction
 
-Foundry consists of:
+Ce projet contient un contrat intelligent **OrderBook** écrit en Solidity qui permet la gestion d'ordres d'achat et de vente de tokens basés sur le standard ERC20. L'objectif est de créer un carnet d'ordres décentralisé, où les utilisateurs peuvent placer des ordres d'achat et de vente de tokens et les faire correspondre automatiquement si possible.
 
--   **Forge**: Ethereum testing framework (like Truffle, Hardhat and DappTools).
--   **Cast**: Swiss army knife for interacting with EVM smart contracts, sending transactions and getting chain data.
--   **Anvil**: Local Ethereum node, akin to Ganache, Hardhat Network.
--   **Chisel**: Fast, utilitarian, and verbose solidity REPL.
+## Fonctionnalités principales
 
-## Documentation
+- **Placer un ordre d'achat** : Un utilisateur peut placer un ordre d'achat en spécifiant un prix et une quantité. Si un ordre de vente correspond est disponible, l'achat est automatiquement exécuté.
+- **Placer un ordre de vente** : Un utilisateur peut placer un ordre de vente en spécifiant un prix et une quantité. Si un ordre d'achat correspond est disponible, la vente est automatiquement exécutée.
+- **Matching d'ordres** : Le contrat essaye de faire correspondre automatiquement les ordres d'achat et de vente basés sur le prix et la disponibilité des tokens dans le carnet d'ordres.
+- **Consultation du carnet d'ordres** : Vous pouvez récupérer les ordres d'achat et de vente par prix.
 
-https://book.getfoundry.sh/
+## Structure du contrat
 
-## Usage
+### Variables importantes
 
-### Build
+- `tradeToken`: L'adresse du token échangé (ERC20).
+- `baseToken`: L'adresse du token de base utilisé pour l'achat et la vente (ERC20).
+- `buyOrders`: Mapping pour stocker les ordres d'achat en fonction du prix.
+- `sellOrders`: Mapping pour stocker les ordres de vente en fonction du prix.
+- `minSellPrice`: Le prix minimum parmi les ordres de vente.
+- `maxBuyPrice`: Le prix maximum parmi les ordres d'achat.
 
-```shell
-$ forge build
-```
+### Méthodes principales
 
-### Test
+#### `PlaceBuyOrder(uint256 price, uint256 amount)`
+- Permet à un utilisateur de placer un ordre d'achat.
+- **Vérifications** :
+  - L'utilisateur a donné une autorisation (allowance) suffisante.
+  - L'utilisateur possède assez de `baseToken` pour l'achat.
+- Si un ordre de vente correspondant est trouvé, il est exécuté.
 
-```shell
-$ forge test
-```
+#### `PlaceSellOrder(uint256 price, uint256 amount)`
+- Permet à un utilisateur de placer un ordre de vente.
+- **Vérifications** :
+  - L'utilisateur a donné une autorisation (allowance) suffisante pour transférer les `tradeToken`.
+  - Si un ordre d'achat correspondant est trouvé, il est exécuté.
 
-### Format
+#### `matchBuyOrder(uint256 price, uint256 amount)`
+- Fonction interne qui essaie de faire correspondre un ordre d'achat avec les ordres de vente disponibles.
 
-```shell
-$ forge fmt
-```
+#### `matchSellOrder(uint256 price, uint256 amount)`
+- Fonction interne qui essaie de faire correspondre un ordre de vente avec les ordres d'achat disponibles.
 
-### Gas Snapshots
+### Méthodes utilitaires
 
-```shell
-$ forge snapshot
-```
+- `getBuyOrders(uint256 price)`: Récupère tous les ordres d'achat pour un prix donné.
+- `getSellOrders(uint256 price)`: Récupère tous les ordres de vente pour un prix donné.
+- `getMinSellPrice()`: Récupère le prix minimum d'un ordre de vente.
+- `getMaxBuyPrice()`: Récupère le prix maximum d'un ordre d'achat.
 
-### Anvil
+## Exemple de fonctionnement
 
-```shell
-$ anvil
-```
+1. **Placer un ordre d'achat** :
+   - Un utilisateur veut acheter 5 tokens `TKN` au prix de 2 `BASE` par token. Il envoie un ordre d'achat via `PlaceBuyOrder(2 * 10**18, 5 * 10**18)`.
+   - Le contrat vérifie si un ordre de vente correspondant est disponible.
+   - Si disponible, l'ordre d'achat est automatiquement exécuté, transférant des `tradeToken` à l'acheteur et des `baseToken` au vendeur.
 
-### Deploy
+2. **Placer un ordre de vente** :
+   - Un utilisateur veut vendre 5 tokens `TKN` au prix de 2 `BASE` par token. Il envoie un ordre de vente via `PlaceSellOrder(2 * 10**18, 5 * 10**18)`.
+   - Si un ordre d'achat correspondant existe, il est automatiquement exécuté.
 
-```shell
-$ forge script script/Counter.s.sol:CounterScript --rpc-url <your_rpc_url> --private-key <your_private_key>
-```
+3. **Correspondance des ordres** :
+   - Le contrat tente de faire correspondre les ordres d'achat et de vente dès que possible. Si un ordre ne trouve pas de correspondance, il est ajouté au carnet d'ordres.
 
-### Cast
+## Conclusion
 
-```shell
-$ cast <subcommand>
-```
+Ce contrat permet de gérer un carnet d'ordres pour deux tokens ERC20 avec des fonctionnalités basiques de correspondance d'ordres. Il assure également la sécurité des fonds grâce à des vérifications d'autorisation et des protections contre la ré-entrance.
 
-### Help
-
-```shell
-$ forge --help
-$ anvil --help
-$ cast --help
-```

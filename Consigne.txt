@@ -1,0 +1,4 @@
+Projet orderbook:
+Créer un projet foundry sur github (repo pulbic)
+Faire un smart contract qui fonctionne comme un orderbook. Il prendra en compte 2 ERC20 que les utilisateurs pourront s'échanger selon les ordres de ventes et d'achat en cours.
+Les tests doivent etre inclus et un coverage de 100% doit etre atteint
